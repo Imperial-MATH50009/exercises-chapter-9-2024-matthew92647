@@ -1,4 +1,5 @@
 import numbers
+from functools import singledispatch
 class Expression:
     def __init__(self, *operands):
         self.operands = operands
@@ -101,18 +102,42 @@ class Add(Operator):
     symbol = "+"
     precedence = 1
 
+
 class Sub(Operator):
     symbol = "-"
     precedence = 1
+
 
 class Mul(Operator):
     symbol = "*"
     precedence = 2
 
+
 class Div(Operator):
     symbol = "/"
     precedence = 2
 
+
 class Pow(Operator):
     symbol  = "^"
     precedence = 3
+
+
+def postvisitor(expr, fn, **kwargs):
+    stack = [expr]
+    visited = {}
+    while stack:
+        e = stack.pop()
+        unvisited_children = []
+        for o in e.operands:
+            if o not in visited:
+                unvisited_children.append(o)
+        
+        if unvisited_children:
+            stack.append(e)
+            stack += unvisited_children
+        else:
+            visited[e] = fn(e, *(visited[o] for o in e.operands), **kwargs)
+
+    return visited[expr]
+
